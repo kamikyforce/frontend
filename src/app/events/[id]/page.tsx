@@ -26,7 +26,7 @@ export default function EventDetailsPage() {
                 console.log('Event data received:', response.data)
                 console.log('Event date value:', response.data.data.eventDate)
                 console.log('Event date type:', typeof response.data.data.eventDate)
-                setEvent(response.data.data) // Fix: use response.data.data instead of response.data
+                setEvent(response.data.data)
             } catch (err) {
                 setError('Evento não encontrado')
                 console.error('Error fetching event:', err)
@@ -49,8 +49,9 @@ export default function EventDetailsPage() {
         setIsRegistering(true)
         try {
             await axios.post(`/events/${params.id}/reserve`)
+            // Fix: Use the same data structure as the initial fetch
             const response = await axios.get(`/events/${params.id}`)
-            setEvent(response.data)
+            setEvent(response.data.data) // Fix: use response.data.data instead of response.data
             toast.success('Reserva realizada com sucesso!')
         } catch (err: any) {
             console.error('Error registering for event:', err)
