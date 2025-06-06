@@ -14,7 +14,7 @@ export const initSocket = (token: string): Socket => {
     autoConnect: true,
   })
 
-  return socket  // ✅ This is now guaranteed to be non-null
+  return socket
 }
 
 export const getSocket = (): Socket | null => socket
