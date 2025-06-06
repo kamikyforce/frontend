@@ -1,103 +1,137 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Event } from '@/types'
+import EventCard from '@/components/EventCard'
+import { useEventFilters } from '@/hooks/useEventFilters'
+import api from '@/lib/axios'
+import { toast } from 'react-toastify'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const { filters, updateFilter, resetFilters, queryString } = useEventFilters()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const fetchEvents = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get(`/events?${queryString}`)
+      // Fix: Access the nested events array
+      const eventsData = response.data?.data?.events || []
+      setEvents(Array.isArray(eventsData) ? eventsData : [])
+    } catch (error: any) {
+      console.error('Error fetching events:', error)
+      toast.error('Erro ao carregar eventos')
+      setEvents([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchEvents()
+  }, [queryString])
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Hero Section */}
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-bold gradient-text mb-4">
+          Eventos Incríveis te Esperam! 🎉
+        </h1>
+        <p className="text-xl text-white/80 max-w-2xl mx-auto">
+          Descubra experiências únicas e conecte-se com pessoas extraordinárias
+        </p>
+      </div>
+        
+      {/* Modern Filters */}
+      <div className="glass p-8 rounded-3xl border border-white/20 mb-12">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+          <span className="mr-3">🔍</span>
+          Encontre seu evento perfeito
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-white/90 mb-3">
+              🔎 Buscar
+            </label>
+            <input
+              type="text"
+              value={filters.search || ''}
+              onChange={(e) => updateFilter('search', e.target.value)}
+              placeholder="Nome do evento..."
+              className="w-full px-4 py-3 glass rounded-xl border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-white/90 mb-3">
+              📅 Data Início
+            </label>
+            <input
+              type="date"
+              value={filters.startDate || ''}
+              onChange={(e) => updateFilter('startDate', e.target.value)}
+              className="w-full px-4 py-3 glass rounded-xl border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-white/90 mb-3">
+              📅 Data Fim
+            </label>
+            <input
+              type="date"
+              value={filters.endDate || ''}
+              onChange={(e) => updateFilter('endDate', e.target.value)}
+              className="w-full px-4 py-3 glass rounded-xl border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            />
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={resetFilters}
+              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+            >
+              🗑️ Limpar Filtros
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Events Grid */}
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-500 rounded-full animate-spin" style={{animationDelay: '0.15s'}}></div>
+          </div>
+        </div>
+      ) : !Array.isArray(events) || events.length === 0 ? (
+        <div className="text-center py-20">
+          <div className="glass p-12 rounded-3xl border border-white/20 max-w-md mx-auto">
+            <div className="text-6xl mb-4">🎭</div>
+            <h3 className="text-2xl font-bold text-white mb-2">Nenhum evento encontrado</h3>
+            <p className="text-white/70">Que tal criar o primeiro evento incrível?</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-white flex items-center">
+              <span className="mr-3">🎪</span>
+              {events.length} {events.length === 1 ? 'Evento Disponível' : 'Eventos Disponíveis'}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {events.map((event, index) => (
+              <div key={event.id} style={{animationDelay: `${index * 0.1}s`}} className="animate-fade-in">
+                <EventCard event={event} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
-  );
+  )
 }
