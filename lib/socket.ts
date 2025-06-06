@@ -7,7 +7,7 @@ export const initSocket = (token: string): Socket => {
     socket.disconnect()
   }
 
-  socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000', {
+  socket = io('https://your-event-api.fly.dev', {
     auth: {
       token,
     },
